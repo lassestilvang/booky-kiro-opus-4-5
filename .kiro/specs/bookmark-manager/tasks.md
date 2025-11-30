@@ -86,34 +86,34 @@
 - [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement authentication system
-  - [ ] 5.1 Implement user registration and password hashing
+- [x] 5. Implement authentication system
+  - [x] 5.1 Implement user registration and password hashing
     - Create auth service with registration logic
     - Implement password hashing with bcrypt/Argon2
     - Create user repository with CRUD operations
     - _Requirements: 1.1_
 
-  - [ ] 5.2 Implement JWT token generation and validation
+  - [x] 5.2 Implement JWT token generation and validation
     - Create JWT utility for access and refresh token generation
     - Implement token validation middleware
     - Implement refresh token rotation
     - _Requirements: 1.2, 1.4_
 
-  - [ ] 5.3 Write property test for JWT token refresh validity
+  - [x] 5.3 Write property test for JWT token refresh validity
     - **Property 23: JWT Token Refresh Validity**
     - **Validates: Requirements 1.4**
 
-  - [ ] 5.4 Implement OAuth2 PKCE flow for browser extension
+  - [x] 5.4 Implement OAuth2 PKCE flow for browser extension
     - Create PKCE code challenge/verifier utilities
     - Implement authorization endpoint
     - Implement token exchange endpoint with PKCE validation
     - _Requirements: 1.3_
 
-  - [ ] 5.5 Write property test for PKCE code verifier validation
+  - [x] 5.5 Write property test for PKCE code verifier validation
     - **Property 24: PKCE Code Verifier Validation**
     - **Validates: Requirements 1.3**
 
-  - [ ] 5.6 Implement rate limiting for login attempts
+  - [x] 5.6 Implement rate limiting for login attempts
     - Create rate limiter middleware using Redis
     - Implement account lockout after 5 failed attempts
     - _Requirements: 1.6_
