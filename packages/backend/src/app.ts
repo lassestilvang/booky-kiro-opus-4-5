@@ -5,6 +5,7 @@ import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { env } from './config/env.js';
+import { bookmarkRoutes } from './routes/index.js';
 
 const isDevelopment = env.NODE_ENV === 'development';
 
@@ -122,6 +123,9 @@ export async function buildApp() {
       name: 'Bookmark Manager API',
     };
   });
+
+  // Register API routes under /v1 prefix
+  await app.register(bookmarkRoutes, { prefix: '/v1' });
 
   return app;
 }

@@ -118,39 +118,39 @@
     - Implement account lockout after 5 failed attempts
     - _Requirements: 1.6_
 
-- [ ] 6. Implement bookmark CRUD operations
-  - [ ] 6.1 Create bookmark repository with database operations
+- [x] 6. Implement bookmark CRUD operations
+  - [x] 6.1 Create bookmark repository with database operations
     - Implement create, read, update, delete operations
     - Implement query with filters (collection, tags, type, domain, date)
     - Implement pagination and sorting
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-  - [ ] 6.2 Create bookmark service with business logic
+  - [x] 6.2 Create bookmark service with business logic
     - Implement bookmark creation with metadata extraction
     - Implement URL normalization on save
     - Implement duplicate detection
     - Implement bookmark update with timestamp management
     - _Requirements: 2.1, 2.2, 2.4, 2.6, 17.1, 17.2_
 
-  - [ ] 6.3 Write property test for bookmark creation populates required fields
+  - [x] 6.3 Write property test for bookmark creation populates required fields
     - **Property 12: Bookmark Creation Populates Required Fields**
     - **Validates: Requirements 2.1, 2.2**
 
-  - [ ] 6.4 Write property test for duplicate detection using normalized URLs
+  - [x] 6.4 Write property test for duplicate detection using normalized URLs
     - **Property 11: Duplicate Detection Uses Normalized URLs**
     - **Validates: Requirements 17.1, 17.2**
 
-  - [ ] 6.5 Implement bookmark deletion with cascade
+  - [x] 6.5 Implement bookmark deletion with cascade
     - Delete associated highlights
     - Remove tag associations
     - Delete snapshots from storage
     - _Requirements: 2.5_
 
-  - [ ] 6.6 Write property test for bookmark deletion removes associated data
+  - [x] 6.6 Write property test for bookmark deletion removes associated data
     - **Property 13: Bookmark Deletion Removes Associated Data**
     - **Validates: Requirements 2.5**
 
-  - [ ] 6.7 Create bookmark API endpoints
+  - [x] 6.7 Create bookmark API endpoints
     - POST /v1/bookmarks - create bookmark
     - GET /v1/bookmarks - list with filters
     - GET /v1/bookmarks/:id - get single bookmark
