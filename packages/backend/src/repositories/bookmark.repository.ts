@@ -178,19 +178,20 @@ export async function findBookmarksByUser(
     }
   }
 
-  // Tag filter - bookmarks must have ALL specified tags
+  // Tag filter - bookmarks must have ALL specified tags (AND logic)
+  // Requirements: 4.2
   if (filters.tags && filters.tags.length > 0) {
-    where.tags = {
-      some: {
-        tag: {
-          normalizedName: {
-            in: filters.tags.map(t => t.toLowerCase()),
+    const normalizedTags = filters.tags.map(t => t.toLowerCase());
+    // Use AND logic: bookmark must have every specified tag
+    where.AND = normalizedTags.map(tagName => ({
+      tags: {
+        some: {
+          tag: {
+            normalizedName: tagName,
           },
         },
       },
-    };
-    // For AND logic, we need to ensure all tags are present
-    // This is handled by checking count matches
+    }));
   }
 
   // Simple text search on title and excerpt

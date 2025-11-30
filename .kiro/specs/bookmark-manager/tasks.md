@@ -186,33 +186,33 @@
     - DELETE /v1/collections/:id - delete collection
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-- [ ] 8. Implement tagging and filtering
-  - [ ] 8.1 Create tag repository and service
+- [x] 8. Implement tagging and filtering
+  - [x] 8.1 Create tag repository and service
     - Implement tag CRUD operations
     - Implement tag suggestions based on prefix matching
     - Implement tag merge functionality
     - _Requirements: 4.1, 4.6, 4.7_
 
-  - [ ] 8.2 Write property test for tag suggestions match prefix
+  - [x] 8.2 Write property test for tag suggestions match prefix
     - **Property 9: Tag Suggestions Match Prefix**
     - **Validates: Requirements 4.6**
 
-  - [ ] 8.3 Write property test for tag merge preserves bookmark count
+  - [x] 8.3 Write property test for tag merge preserves bookmark count
     - **Property 10: Tag Merge Preserves Bookmark Count**
     - **Validates: Requirements 4.7**
 
-  - [ ] 8.4 Implement bookmark filtering logic
+  - [x] 8.4 Implement bookmark filtering logic
     - Filter by tags (AND logic)
     - Filter by type
     - Filter by domain
     - Filter by date range
     - _Requirements: 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 8.5 Write property test for filter results satisfy filter criteria
+  - [x] 8.5 Write property test for filter results satisfy filter criteria
     - **Property 8: Filter Results Satisfy Filter Criteria**
     - **Validates: Requirements 4.2, 4.3, 4.4, 4.5**
 
-  - [ ] 8.6 Create tag API endpoints
+  - [x] 8.6 Create tag API endpoints
     - GET /v1/tags - list user's tags
     - POST /v1/tags/merge - merge tags
     - GET /v1/tags/suggestions - get tag suggestions

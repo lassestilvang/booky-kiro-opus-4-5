@@ -5,7 +5,7 @@ import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { env } from './config/env.js';
-import { bookmarkRoutes, collectionRoutes, publicCollectionRoutes } from './routes/index.js';
+import { bookmarkRoutes, collectionRoutes, publicCollectionRoutes, tagRoutes } from './routes/index.js';
 
 const isDevelopment = env.NODE_ENV === 'development';
 
@@ -128,6 +128,7 @@ export async function buildApp() {
   await app.register(bookmarkRoutes, { prefix: '/v1' });
   await app.register(collectionRoutes, { prefix: '/v1' });
   await app.register(publicCollectionRoutes, { prefix: '/v1' });
+  await app.register(tagRoutes, { prefix: '/v1' });
 
   return app;
 }

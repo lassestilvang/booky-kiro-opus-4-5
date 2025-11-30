@@ -3,3 +3,4 @@
  */
 export { bookmarkRoutes } from './bookmark.routes.js';
 export { collectionRoutes, publicCollectionRoutes } from './collection.routes.js';
+export { tagRoutes } from './tag.routes.js';
