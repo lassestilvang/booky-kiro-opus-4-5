@@ -246,7 +246,7 @@
     - POST /v1/bookmarks/bulk - execute bulk operation
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
 
-- [-] 11. Implement sharing and permissions
+- [x] 11. Implement sharing and permissions
   - [x] 11.1 Create permission repository and service
     - Implement permission CRUD operations
     - Implement role-based access checks (viewer, editor)
@@ -265,7 +265,7 @@
     - **Property 19: Public Collection Anonymous Access**
     - **Validates: Requirements 13.2**
 
-  - [-] 11.5 Create sharing API endpoints
+  - [x] 11.5 Create sharing API endpoints
     - POST /v1/collections/:id/share - share collection
     - DELETE /v1/collections/:id/share/:userId - revoke share
     - GET /v1/public/:slug - public collection access

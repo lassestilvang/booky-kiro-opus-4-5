@@ -1,6 +1,6 @@
 /**
  * Collection API Routes
- * Requirements: 3.1, 3.2, 3.3, 3.4
+ * Requirements: 3.1, 3.2, 3.3, 3.4, 13.1, 13.2, 13.3, 13.4
  */
 import type { FastifyInstance } from 'fastify';
 import { authMiddleware } from '../middleware/auth.middleware.js';
@@ -12,12 +12,18 @@ import {
   deleteCollectionForUser,
   makeCollectionPublic,
   makeCollectionPrivate,
-  getPublicCollection,
 } from '../services/collection.service.js';
+import {
+  shareCollection,
+  revokeShare,
+  listCollectionShares,
+  getPublicCollectionWithBookmarks,
+} from '../services/permission.service.js';
 import {
   validateCreateCollection,
   validateUpdateCollection,
 } from '../models/collection.model.js';
+import { validateShareCollection } from '../models/permission.model.js';
 
 // Request body types
 interface CreateCollectionBody {
@@ -356,39 +362,148 @@ export async function collectionRoutes(fastify: FastifyInstance): Promise<void> 
       movedBookmarks: result.movedBookmarks,
     });
   });
-}
 
-/**
- * Public collection routes (no auth required)
- */
-export async function publicCollectionRoutes(fastify: FastifyInstance): Promise<void> {
   /**
-   * GET /v1/public/:slug - Get public collection by share slug
-   * Requirements: 3.5
+   * POST /v1/collections/:id/share - Share a collection with another user
+   * Requirements: 13.1
    */
-  fastify.get<{ Params: { slug: string } }>('/public/:slug', {
+  fastify.post<{ Params: { id: string }; Body: { userId: string; role?: 'VIEWER' | 'EDITOR' } }>(
+    '/collections/:id/share',
+    {
+      schema: {
+        description: 'Share a collection with another user',
+        tags: ['Collections', 'Sharing'],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          required: ['id'],
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+          },
+        },
+        body: {
+          type: 'object',
+          required: ['userId'],
+          properties: {
+            userId: { type: 'string', format: 'uuid' },
+            role: { type: 'string', enum: ['VIEWER', 'EDITOR'], default: 'VIEWER' },
+          },
+        },
+        response: {
+          201: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              collectionId: { type: 'string', format: 'uuid' },
+              userId: { type: 'string', format: 'uuid' },
+              role: { type: 'string', enum: ['VIEWER', 'EDITOR'] },
+              createdAt: { type: 'string', format: 'date-time' },
+            },
+          },
+          400: errorResponseSchema,
+          404: errorResponseSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const ownerId = request.user!.userId;
+      const { id: collectionId } = request.params;
+
+      // Validate input
+      const validation = validateShareCollection(request.body);
+      if (!validation.success) {
+        return reply.status(400).send({
+          error: {
+            code: 'VAL_002',
+            message: 'Invalid share data',
+            requestId: request.id,
+            details: validation.error.flatten(),
+          },
+        });
+      }
+
+      const result = await shareCollection(collectionId, ownerId, validation.data);
+
+      if (!result.success) {
+        const statusMap: Record<string, number> = {
+          PERMISSION_COLLECTION_NOT_FOUND: 404,
+          PERMISSION_USER_NOT_FOUND: 404,
+          PERMISSION_NOT_OWNER: 403,
+          PERMISSION_CANNOT_SHARE_WITH_SELF: 400,
+          PERMISSION_ALREADY_SHARED: 400,
+        };
+        const status = statusMap[result.errorCode!] ?? 400;
+        return reply.status(status).send({
+          error: {
+            code: result.errorCode,
+            message: result.error,
+            requestId: request.id,
+          },
+        });
+      }
+
+      return reply.status(201).send(result.permission);
+    }
+  );
+
+  /**
+   * GET /v1/collections/:id/share - List users a collection is shared with
+   * Requirements: 13.1
+   */
+  fastify.get<{ Params: { id: string } }>('/collections/:id/share', {
     schema: {
-      description: 'Get a public collection by its share slug',
-      tags: ['Collections'],
+      description: 'List all users a collection is shared with',
+      tags: ['Collections', 'Sharing'],
+      security: [{ bearerAuth: [] }],
       params: {
         type: 'object',
-        required: ['slug'],
+        required: ['id'],
         properties: {
-          slug: { type: 'string' },
+          id: { type: 'string', format: 'uuid' },
         },
       },
       response: {
-        200: collectionResponseSchema,
+        200: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              collectionId: { type: 'string', format: 'uuid' },
+              userId: { type: 'string', format: 'uuid' },
+              role: { type: 'string', enum: ['VIEWER', 'EDITOR'] },
+              createdAt: { type: 'string', format: 'date-time' },
+              user: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', format: 'uuid' },
+                  email: { type: 'string' },
+                  name: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
         404: errorResponseSchema,
+        401: errorResponseSchema,
+        403: errorResponseSchema,
       },
     },
   }, async (request, reply) => {
-    const { slug } = request.params;
+    const ownerId = request.user!.userId;
+    const { id: collectionId } = request.params;
 
-    const result = await getPublicCollection(slug);
-    
+    const result = await listCollectionShares(collectionId, ownerId);
+
     if (!result.success) {
-      return reply.status(404).send({
+      const statusMap: Record<string, number> = {
+        PERMISSION_COLLECTION_NOT_FOUND: 404,
+        PERMISSION_NOT_OWNER: 403,
+      };
+      const status = statusMap[result.errorCode!] ?? 400;
+      return reply.status(status).send({
         error: {
           code: result.errorCode,
           message: result.error,
@@ -397,6 +512,162 @@ export async function publicCollectionRoutes(fastify: FastifyInstance): Promise<
       });
     }
 
-    return reply.send(result.collection);
+    return reply.send(result.permissions);
   });
+
+  /**
+   * DELETE /v1/collections/:id/share/:userId - Revoke sharing with a user
+   * Requirements: 13.4
+   */
+  fastify.delete<{ Params: { id: string; userId: string } }>(
+    '/collections/:id/share/:userId',
+    {
+      schema: {
+        description: 'Revoke sharing of a collection with a user',
+        tags: ['Collections', 'Sharing'],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          required: ['id', 'userId'],
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            userId: { type: 'string', format: 'uuid' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+            },
+          },
+          404: errorResponseSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const ownerId = request.user!.userId;
+      const { id: collectionId, userId: targetUserId } = request.params;
+
+      const result = await revokeShare(collectionId, ownerId, targetUserId);
+
+      if (!result.success) {
+        const statusMap: Record<string, number> = {
+          PERMISSION_COLLECTION_NOT_FOUND: 404,
+          PERMISSION_NOT_OWNER: 403,
+          PERMISSION_NOT_FOUND: 404,
+        };
+        const status = statusMap[result.errorCode!] ?? 400;
+        return reply.status(status).send({
+          error: {
+            code: result.errorCode,
+            message: result.error,
+            requestId: request.id,
+          },
+        });
+      }
+
+      return reply.send({ success: true });
+    }
+  );
+}
+
+/**
+ * Public collection routes (no auth required)
+ * Requirements: 13.2
+ */
+export async function publicCollectionRoutes(fastify: FastifyInstance): Promise<void> {
+  /**
+   * GET /v1/public/:slug - Get public collection by share slug with bookmarks
+   * Requirements: 13.2
+   */
+  fastify.get<{ Params: { slug: string }; Querystring: { page?: number; limit?: number } }>(
+    '/public/:slug',
+    {
+      schema: {
+        description: 'Get a public collection by its share slug with bookmarks',
+        tags: ['Collections', 'Public'],
+        params: {
+          type: 'object',
+          required: ['slug'],
+          properties: {
+            slug: { type: 'string' },
+          },
+        },
+        querystring: {
+          type: 'object',
+          properties: {
+            page: { type: 'integer', minimum: 1, default: 1 },
+            limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              collection: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', format: 'uuid' },
+                  title: { type: 'string' },
+                  description: { type: 'string', nullable: true },
+                  icon: { type: 'string' },
+                  shareSlug: { type: 'string' },
+                },
+              },
+              bookmarks: {
+                type: 'object',
+                properties: {
+                  data: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string', format: 'uuid' },
+                        url: { type: 'string' },
+                        title: { type: 'string' },
+                        excerpt: { type: 'string', nullable: true },
+                        coverUrl: { type: 'string', nullable: true },
+                        domain: { type: 'string' },
+                        type: { type: 'string' },
+                        createdAt: { type: 'string', format: 'date-time' },
+                      },
+                    },
+                  },
+                  total: { type: 'integer' },
+                  page: { type: 'integer' },
+                  limit: { type: 'integer' },
+                  totalPages: { type: 'integer' },
+                },
+              },
+            },
+          },
+          404: errorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { slug } = request.params;
+      const { page, limit } = request.query;
+
+      const result = await getPublicCollectionWithBookmarks(slug, { page, limit });
+
+      if (!result.success) {
+        return reply.status(404).send({
+          error: {
+            code: result.errorCode,
+            message: result.error,
+            requestId: request.id,
+          },
+        });
+      }
+
+      return reply.send({
+        collection: result.collection,
+        bookmarks: result.bookmarks,
+      });
+    }
+  );
 }
