@@ -246,13 +246,13 @@
     - POST /v1/bookmarks/bulk - execute bulk operation
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
 
-- [ ] 11. Implement sharing and permissions
-  - [ ] 11.1 Create permission repository and service
+- [-] 11. Implement sharing and permissions
+  - [x] 11.1 Create permission repository and service
     - Implement permission CRUD operations
     - Implement role-based access checks (viewer, editor)
     - _Requirements: 13.1, 13.4_
 
-  - [ ] 11.2 Write property test for permission-based access control
+  - [-] 11.2 Write property test for permission-based access control
     - **Property 18: Permission-Based Access Control**
     - **Validates: Requirements 13.1, 13.4**
 
