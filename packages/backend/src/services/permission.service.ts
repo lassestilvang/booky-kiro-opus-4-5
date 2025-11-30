@@ -349,3 +349,88 @@ export async function getCollectionPermissions(
 ): Promise<CollectionPermission[]> {
   return findPermissionsByCollection(collectionId);
 }
+
+
+/**
+ * Gets public collection with bookmarks by share slug (for anonymous access)
+ * Requirements: 13.2
+ */
+export async function getPublicCollectionWithBookmarks(
+  shareSlug: string,
+  pagination: { page?: number; limit?: number } = {}
+): Promise<{
+  success: boolean;
+  collection?: {
+    id: string;
+    title: string;
+    description: string | null;
+    icon: string;
+    shareSlug: string;
+  };
+  bookmarks?: {
+    data: Array<{
+      id: string;
+      url: string;
+      title: string;
+      excerpt: string | null;
+      coverUrl: string | null;
+      domain: string;
+      type: string;
+      createdAt: Date;
+    }>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  error?: string;
+  errorCode?: string;
+}> {
+  const collection = await findCollectionByShareSlug(shareSlug);
+  
+  if (!collection || !collection.isPublic) {
+    return {
+      success: false,
+      error: 'Collection not found',
+      errorCode: PermissionErrorCodes.COLLECTION_NOT_FOUND,
+    };
+  }
+
+  // Import dynamically to avoid circular dependency
+  const { findBookmarksByCollectionId } = await import('../repositories/bookmark.repository.js');
+  
+  const bookmarksResult = await findBookmarksByCollectionId(collection.id, {
+    page: pagination.page ?? 1,
+    limit: pagination.limit ?? 20,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  });
+
+  // Return only public-safe fields
+  return {
+    success: true,
+    collection: {
+      id: collection.id,
+      title: collection.title,
+      description: collection.description ?? null,
+      icon: collection.icon,
+      shareSlug: collection.shareSlug!,
+    },
+    bookmarks: {
+      data: bookmarksResult.data.map(b => ({
+        id: b.id,
+        url: b.url,
+        title: b.title,
+        excerpt: b.excerpt ?? null,
+        coverUrl: b.coverUrl ?? null,
+        domain: b.domain,
+        type: b.type,
+        createdAt: b.createdAt,
+      })),
+      total: bookmarksResult.total,
+      page: bookmarksResult.page,
+      limit: bookmarksResult.limit,
+      totalPages: bookmarksResult.totalPages,
+    },
+  };
+}

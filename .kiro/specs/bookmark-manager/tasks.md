@@ -252,20 +252,20 @@
     - Implement role-based access checks (viewer, editor)
     - _Requirements: 13.1, 13.4_
 
-  - [-] 11.2 Write property test for permission-based access control
+  - [x] 11.2 Write property test for permission-based access control
     - **Property 18: Permission-Based Access Control**
     - **Validates: Requirements 13.1, 13.4**
 
-  - [ ] 11.3 Implement public collection access
+  - [x] 11.3 Implement public collection access
     - Create public collection endpoint
     - Implement anonymous read-only access
     - _Requirements: 13.2_
 
-  - [ ] 11.4 Write property test for public collection anonymous access
+  - [x] 11.4 Write property test for public collection anonymous access
     - **Property 19: Public Collection Anonymous Access**
     - **Validates: Requirements 13.2**
 
-  - [ ] 11.5 Create sharing API endpoints
+  - [-] 11.5 Create sharing API endpoints
     - POST /v1/collections/:id/share - share collection
     - DELETE /v1/collections/:id/share/:userId - revoke share
     - GET /v1/public/:slug - public collection access

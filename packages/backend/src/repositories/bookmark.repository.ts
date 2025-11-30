@@ -526,3 +526,41 @@ export async function findBookmarksByIdsWithTags(
 
   return bookmarks as (Bookmark & { tags: { tagId: string }[] })[];
 }
+
+
+/**
+ * Finds bookmarks by collection ID (for public collection access)
+ * Requirements: 13.2
+ */
+export async function findBookmarksByCollectionId(
+  collectionId: string,
+  pagination: PaginationOptions = {}
+): Promise<PaginatedResult<Bookmark>> {
+  const {
+    page = 1,
+    limit = 20,
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+  } = pagination;
+
+  const where: Prisma.BookmarkWhereInput = { collectionId };
+
+  // Get total count
+  const total = await prisma.bookmark.count({ where });
+
+  // Get paginated results
+  const bookmarks = await prisma.bookmark.findMany({
+    where,
+    orderBy: { [sortBy]: sortOrder },
+    skip: (page - 1) * limit,
+    take: limit,
+  });
+
+  return {
+    data: bookmarks as Bookmark[],
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+}
