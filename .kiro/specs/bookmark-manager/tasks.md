@@ -158,27 +158,27 @@
     - DELETE /v1/bookmarks/:id - delete bookmark
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 7. Implement collection management
-  - [ ] 7.1 Create collection repository with database operations
+- [x] 7. Implement collection management
+  - [x] 7.1 Create collection repository with database operations
     - Implement CRUD operations for collections
     - Implement query for user's owned and shared collections
     - _Requirements: 3.1, 3.2_
 
-  - [ ] 7.2 Create collection service with business logic
+  - [x] 7.2 Create collection service with business logic
     - Implement collection creation with default "Unsorted" collection
     - Implement collection deletion with bookmark preservation
     - Implement public sharing with slug generation
     - _Requirements: 3.1, 3.2, 3.4, 3.5_
 
-  - [ ] 7.3 Write property test for collection deletion preserves bookmarks
+  - [x] 7.3 Write property test for collection deletion preserves bookmarks
     - **Property 14: Collection Deletion Preserves Bookmarks**
     - **Validates: Requirements 3.4**
 
-  - [ ] 7.4 Write property test for public collection slug uniqueness
+  - [x] 7.4 Write property test for public collection slug uniqueness
     - **Property 15: Public Collection Slug Uniqueness**
     - **Validates: Requirements 3.5**
 
-  - [ ] 7.5 Create collection API endpoints
+  - [x] 7.5 Create collection API endpoints
     - POST /v1/collections - create collection
     - GET /v1/collections - list user's collections
     - GET /v1/collections/:id - get collection details
