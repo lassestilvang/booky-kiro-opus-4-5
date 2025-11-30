@@ -218,7 +218,7 @@
     - GET /v1/tags/suggestions - get tag suggestions
     - _Requirements: 4.1, 4.6, 4.7_
 
-- [ ] 9. Checkpoint - Ensure all tests pass
+- [x] 9. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 10. Implement bulk operations
