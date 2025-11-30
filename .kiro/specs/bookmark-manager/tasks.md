@@ -27,63 +27,63 @@
     - Set up seed script with demo data
     - _Requirements: 2.2, 3.1, 4.1, 11.1, 13.1_
 
-- [ ] 2. Implement core data models and serialization
-  - [ ] 2.1 Implement Bookmark model with validation and serialization
+- [x] 2. Implement core data models and serialization
+  - [x] 2.1 Implement Bookmark model with validation and serialization
     - Create Bookmark TypeScript interfaces and Zod schemas
     - Implement JSON serialization/deserialization functions
     - Implement bookmark validation logic
     - _Requirements: 2.1, 2.2, 2.7, 2.8_
 
-  - [ ] 2.2 Write property test for Bookmark serialization round-trip
+  - [x] 2.2 Write property test for Bookmark serialization round-trip
     - **Property 1: Bookmark Serialization Round-Trip**
     - **Validates: Requirements 2.7, 2.8**
 
-  - [ ] 2.3 Implement Collection model with validation and serialization
+  - [x] 2.3 Implement Collection model with validation and serialization
     - Create Collection TypeScript interfaces and Zod schemas
     - Implement JSON serialization/deserialization functions
     - Implement collection validation logic
     - _Requirements: 3.1, 3.6, 3.7_
 
-  - [ ] 2.4 Write property test for Collection serialization round-trip
+  - [x] 2.4 Write property test for Collection serialization round-trip
     - **Property 2: Collection Serialization Round-Trip**
     - **Validates: Requirements 3.6, 3.7**
 
-  - [ ] 2.5 Implement Highlight model with validation and serialization
+  - [x] 2.5 Implement Highlight model with validation and serialization
     - Create Highlight TypeScript interfaces and Zod schemas
     - Implement JSON serialization/deserialization with position context
     - Implement highlight validation logic
     - _Requirements: 11.1, 11.2, 11.6, 11.7_
 
-  - [ ] 2.6 Write property test for Highlight serialization round-trip
+  - [x] 2.6 Write property test for Highlight serialization round-trip
     - **Property 3: Highlight Serialization Round-Trip**
     - **Validates: Requirements 11.6, 11.7**
 
-  - [ ] 2.7 Implement Tag model with normalization
+  - [x] 2.7 Implement Tag model with normalization
     - Create Tag TypeScript interfaces and Zod schemas
     - Implement tag name normalization (lowercase, trim)
     - _Requirements: 4.1_
 
-  - [ ] 2.8 Write property test for Tag normalization consistency
+  - [x] 2.8 Write property test for Tag normalization consistency
     - **Property 7: Tag Normalization Consistency**
     - **Validates: Requirements 4.1**
 
-- [ ] 3. Implement URL normalization utility
-  - [ ] 3.1 Create URL normalizer module
+- [x] 3. Implement URL normalization utility
+  - [x] 3.1 Create URL normalizer module
     - Implement URL parsing and validation
     - Implement tracking parameter removal (utm_*, fbclid, gclid, etc.)
     - Implement URL canonicalization (lowercase host, remove default ports, sort query params)
     - Implement domain extraction
     - _Requirements: 2.6_
 
-  - [ ] 3.2 Write property test for URL normalization idempotence
+  - [x] 3.2 Write property test for URL normalization idempotence
     - **Property 5: URL Normalization Idempotence**
     - **Validates: Requirements 2.6**
 
-  - [ ] 3.3 Write property test for tracking parameter removal
+  - [x] 3.3 Write property test for tracking parameter removal
     - **Property 6: URL Normalization Removes Tracking Parameters**
     - **Validates: Requirements 2.6**
 
-- [ ] 4. Checkpoint - Ensure all tests pass
+- [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Implement authentication system
