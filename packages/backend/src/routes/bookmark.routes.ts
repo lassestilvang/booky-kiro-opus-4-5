@@ -1,6 +1,6 @@
 /**
  * Bookmark API Routes
- * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5
+ * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 14.1, 14.2, 14.3, 14.4
  */
 import type { FastifyInstance } from 'fastify';
 import { authMiddleware } from '../middleware/auth.middleware.js';
@@ -11,11 +11,16 @@ import {
   updateBookmarkForUser,
   deleteBookmarkForUser,
   updateBookmarkTags,
+  reorderBookmarks,
 } from '../services/bookmark.service.js';
 import {
   validateCreateBookmark,
   validateUpdateBookmark,
 } from '../models/bookmark.model.js';
+import {
+  executeBulkOperation,
+  validateBulkOperation,
+} from '../services/bulk-operation.service.js';
 import type { BookmarkFilters, PaginationOptions } from '../repositories/bookmark.repository.js';
 
 // Request body types
@@ -38,6 +43,21 @@ interface UpdateBookmarkBody {
   isFavorite?: boolean;
   sortOrder?: number;
   tags?: string[];
+}
+
+interface BulkOperationBody {
+  bookmarkIds: string[];
+  action: 'addTags' | 'removeTags' | 'move' | 'delete' | 'favorite' | 'unfavorite' | 'reorder';
+  payload?: {
+    tags?: string[];
+    tagIds?: string[];
+    collectionId?: string;
+    orders?: { bookmarkId: string; sortOrder: number }[];
+  };
+}
+
+interface ReorderBody {
+  orders: { bookmarkId: string; sortOrder: number }[];
 }
 
 interface ListBookmarksQuery {
@@ -412,5 +432,157 @@ export async function bookmarkRoutes(fastify: FastifyInstance): Promise<void> {
     }
 
     return reply.status(204).send();
+  });
+
+
+  /**
+   * POST /v1/bookmarks/bulk - Execute bulk operation on bookmarks
+   * Requirements: 14.1, 14.2, 14.3, 14.4
+   */
+  fastify.post<{ Body: BulkOperationBody }>('/bookmarks/bulk', {
+    schema: {
+      description: 'Execute a bulk operation on multiple bookmarks',
+      tags: ['Bookmarks'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['bookmarkIds', 'action'],
+        properties: {
+          bookmarkIds: {
+            type: 'array',
+            items: { type: 'string', format: 'uuid' },
+            minItems: 1,
+          },
+          action: {
+            type: 'string',
+            enum: ['addTags', 'removeTags', 'move', 'delete', 'favorite', 'unfavorite', 'reorder'],
+          },
+          payload: {
+            type: 'object',
+            properties: {
+              tags: { type: 'array', items: { type: 'string' } },
+              tagIds: { type: 'array', items: { type: 'string', format: 'uuid' } },
+              collectionId: { type: 'string', format: 'uuid' },
+              orders: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: ['bookmarkId', 'sortOrder'],
+                  properties: {
+                    bookmarkId: { type: 'string', format: 'uuid' },
+                    sortOrder: { type: 'integer' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            affectedCount: { type: 'integer' },
+          },
+        },
+        400: errorResponseSchema,
+        401: errorResponseSchema,
+      },
+    },
+  }, async (request, reply) => {
+    const userId = request.user!.userId;
+
+    // Validate input
+    const validation = validateBulkOperation(request.body);
+    if (!validation.success) {
+      return reply.status(400).send({
+        error: {
+          code: 'VAL_002',
+          message: 'Invalid bulk operation data',
+          requestId: request.id,
+          details: validation.error.flatten(),
+        },
+      });
+    }
+
+    const result = await executeBulkOperation(userId, validation.data);
+
+    if (!result.success) {
+      return reply.status(400).send({
+        error: {
+          code: result.errorCode,
+          message: result.error,
+          requestId: request.id,
+        },
+      });
+    }
+
+    return reply.send({
+      success: true,
+      affectedCount: result.affectedCount,
+    });
+  });
+
+
+  /**
+   * POST /v1/bookmarks/reorder - Reorder bookmarks within a collection
+   * Requirements: 14.4
+   */
+  fastify.post<{ Body: ReorderBody }>('/bookmarks/reorder', {
+    schema: {
+      description: 'Reorder bookmarks by setting their sort order',
+      tags: ['Bookmarks'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['orders'],
+        properties: {
+          orders: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['bookmarkId', 'sortOrder'],
+              properties: {
+                bookmarkId: { type: 'string', format: 'uuid' },
+                sortOrder: { type: 'integer' },
+              },
+            },
+            minItems: 1,
+          },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            affectedCount: { type: 'integer' },
+          },
+        },
+        400: errorResponseSchema,
+        401: errorResponseSchema,
+      },
+    },
+  }, async (request, reply) => {
+    const userId = request.user!.userId;
+    const { orders } = request.body;
+
+    const result = await reorderBookmarks(userId, orders);
+
+    if (!result.success) {
+      return reply.status(400).send({
+        error: {
+          code: 'REORDER_FAILED',
+          message: result.error,
+          requestId: request.id,
+        },
+      });
+    }
+
+    return reply.send({
+      success: true,
+      affectedCount: result.affectedCount,
+    });
   });
 }

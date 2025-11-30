@@ -389,3 +389,140 @@ export async function updateBookmarkSortOrder(
 
   return result.count > 0;
 }
+
+/**
+ * Bulk updates sort order for multiple bookmarks
+ * Requirements: 14.4
+ */
+export async function bulkUpdateSortOrder(
+  bookmarkOrders: { bookmarkId: string; sortOrder: number }[],
+  ownerId: string
+): Promise<number> {
+  let updatedCount = 0;
+  
+  // Use a transaction to ensure atomicity
+  await prisma.$transaction(async (tx) => {
+    for (const { bookmarkId, sortOrder } of bookmarkOrders) {
+      const result = await tx.bookmark.updateMany({
+        where: { id: bookmarkId, ownerId },
+        data: { sortOrder },
+      });
+      updatedCount += result.count;
+    }
+  });
+
+  return updatedCount;
+}
+
+/**
+ * Bulk add tags to multiple bookmarks
+ * Requirements: 14.1
+ */
+export async function bulkAddTagsToBookmarks(
+  bookmarkIds: string[],
+  tagIds: string[],
+  ownerId: string
+): Promise<number> {
+  // First verify all bookmarks belong to the owner
+  const validBookmarks = await prisma.bookmark.findMany({
+    where: {
+      id: { in: bookmarkIds },
+      ownerId,
+    },
+    select: { id: true },
+  });
+
+  const validBookmarkIds = validBookmarks.map(b => b.id);
+  
+  // Create tag associations for all valid bookmarks
+  const data = validBookmarkIds.flatMap(bookmarkId =>
+    tagIds.map(tagId => ({
+      bookmarkId,
+      tagId,
+    }))
+  );
+
+  if (data.length === 0) {
+    return 0;
+  }
+
+  await prisma.bookmarkTag.createMany({
+    data,
+    skipDuplicates: true,
+  });
+
+  return validBookmarkIds.length;
+}
+
+/**
+ * Bulk remove tags from multiple bookmarks
+ * Requirements: 14.1
+ */
+export async function bulkRemoveTagsFromBookmarks(
+  bookmarkIds: string[],
+  tagIds: string[],
+  ownerId: string
+): Promise<number> {
+  // First verify all bookmarks belong to the owner
+  const validBookmarks = await prisma.bookmark.findMany({
+    where: {
+      id: { in: bookmarkIds },
+      ownerId,
+    },
+    select: { id: true },
+  });
+
+  const validBookmarkIds = validBookmarks.map(b => b.id);
+
+  if (validBookmarkIds.length === 0) {
+    return 0;
+  }
+
+  await prisma.bookmarkTag.deleteMany({
+    where: {
+      bookmarkId: { in: validBookmarkIds },
+      tagId: { in: tagIds },
+    },
+  });
+
+  return validBookmarkIds.length;
+}
+
+/**
+ * Gets bookmarks by IDs with ownership check
+ */
+export async function findBookmarksByIds(
+  bookmarkIds: string[],
+  ownerId: string
+): Promise<Bookmark[]> {
+  const bookmarks = await prisma.bookmark.findMany({
+    where: {
+      id: { in: bookmarkIds },
+      ownerId,
+    },
+  });
+
+  return bookmarks as Bookmark[];
+}
+
+/**
+ * Gets bookmarks by IDs with their tags
+ */
+export async function findBookmarksByIdsWithTags(
+  bookmarkIds: string[],
+  ownerId: string
+): Promise<(Bookmark & { tags: { tagId: string }[] })[]> {
+  const bookmarks = await prisma.bookmark.findMany({
+    where: {
+      id: { in: bookmarkIds },
+      ownerId,
+    },
+    include: {
+      tags: {
+        select: { tagId: true },
+      },
+    },
+  });
+
+  return bookmarks as (Bookmark & { tags: { tagId: string }[] })[];
+}

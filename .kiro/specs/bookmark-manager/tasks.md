@@ -221,28 +221,28 @@
 - [x] 9. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Implement bulk operations
-  - [ ] 10.1 Create bulk operation service
+- [x] 10. Implement bulk operations
+  - [x] 10.1 Create bulk operation service
     - Implement bulk add tags
     - Implement bulk remove tags
     - Implement bulk move to collection
     - Implement bulk delete
     - _Requirements: 14.1, 14.2, 14.3_
 
-  - [ ] 10.2 Write property test for bulk operations affect all selected items
+  - [x] 10.2 Write property test for bulk operations affect all selected items
     - **Property 16: Bulk Operations Affect All Selected Items**
     - **Validates: Requirements 14.1, 14.2, 14.3**
 
-  - [ ] 10.3 Implement manual sort order
+  - [x] 10.3 Implement manual sort order
     - Add sortOrder field handling
     - Implement reorder endpoint
     - _Requirements: 14.4_
 
-  - [ ] 10.4 Write property test for sort order persistence
+  - [x] 10.4 Write property test for sort order persistence
     - **Property 17: Sort Order Persistence**
     - **Validates: Requirements 14.4**
 
-  - [ ] 10.5 Create bulk operation API endpoint
+  - [x] 10.5 Create bulk operation API endpoint
     - POST /v1/bookmarks/bulk - execute bulk operation
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
 

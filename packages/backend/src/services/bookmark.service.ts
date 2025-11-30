@@ -479,3 +479,79 @@ export async function checkDuplicateUrl(
     existingBookmarks,
   };
 }
+
+/**
+ * Reorders bookmarks within a collection
+ * Requirements: 14.4
+ * 
+ * @param ownerId - The owner's user ID
+ * @param orders - Array of bookmark IDs with their new sort orders
+ * @returns Result with count of affected bookmarks
+ */
+export async function reorderBookmarks(
+  ownerId: string,
+  orders: { bookmarkId: string; sortOrder: number }[]
+): Promise<{ success: boolean; affectedCount: number; error?: string }> {
+  if (!orders || orders.length === 0) {
+    return {
+      success: false,
+      affectedCount: 0,
+      error: 'Orders array is required',
+    };
+  }
+
+  // Verify all bookmarks belong to the user
+  const bookmarkIds = orders.map(o => o.bookmarkId);
+  const validBookmarks = await prisma.bookmark.findMany({
+    where: {
+      id: { in: bookmarkIds },
+      ownerId,
+    },
+    select: { id: true },
+  });
+
+  const validBookmarkIds = new Set(validBookmarks.map(b => b.id));
+  const validOrders = orders.filter(o => validBookmarkIds.has(o.bookmarkId));
+
+  if (validOrders.length === 0) {
+    return {
+      success: false,
+      affectedCount: 0,
+      error: 'No valid bookmarks found',
+    };
+  }
+
+  // Update sort orders in a transaction
+  await prisma.$transaction(async (tx) => {
+    for (const { bookmarkId, sortOrder } of validOrders) {
+      await tx.bookmark.update({
+        where: { id: bookmarkId },
+        data: { sortOrder },
+      });
+    }
+  });
+
+  return {
+    success: true,
+    affectedCount: validOrders.length,
+  };
+}
+
+/**
+ * Gets bookmarks in a collection sorted by sortOrder
+ * Requirements: 14.4
+ */
+export async function getBookmarksBySortOrder(
+  ownerId: string,
+  collectionId: string
+): Promise<Bookmark[]> {
+  const bookmarks = await prisma.bookmark.findMany({
+    where: {
+      ownerId,
+      collectionId,
+    },
+    orderBy: { sortOrder: 'asc' },
+  });
+
+  return bookmarks as Bookmark[];
+}
