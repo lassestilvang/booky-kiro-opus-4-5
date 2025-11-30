@@ -1,0 +1,252 @@
+// Prisma schema for Bookmark Manager
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  plan         Plan     @default(FREE)
+  preferences  Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  collections           Collection[]
+  bookmarks             Bookmark[]
+  tags                  Tag[]
+  highlights            Highlight[]
+  files                 File[]
+  backups               Backup[]
+  collectionPermissions CollectionPermission[]
+  reminders             Reminder[]
+
+  @@map("users")
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+// Collection Model
+model Collection {
+  id          String   @id @default(uuid())
+  ownerId     String   @map("owner_id")
+  title       String
+  description String?
+  icon        String   @default("folder")
+  color       String?
+  isPublic    Boolean  @default(false) @map("is_public")
+  shareSlug   String?  @unique @map("share_slug")
+  sortOrder   Int      @default(0) @map("sort_order")
+  parentId    String?  @map("parent_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+
+  // Relations
+  owner       User                   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  parent      Collection?            @relation("CollectionHierarchy", fields: [parentId], references: [id])
+  children    Collection[]           @relation("CollectionHierarchy")
+  bookmarks   Bookmark[]
+  permissions CollectionPermission[]
+
+  @@index([ownerId])
+  @@index([shareSlug])
+  @@map("collections")
+}
+
+// Bookmark Model
+model Bookmark {
+  id                  String       @id @default(uuid())
+  ownerId             String       @map("owner_id")
+  collectionId        String       @map("collection_id")
+  url                 String
+  normalizedUrl       String       @map("normalized_url")
+  title               String
+  excerpt             String?
+  coverUrl            String?      @map("cover_url")
+  domain              String
+  type                BookmarkType @default(LINK)
+  contentSnapshotPath String?      @map("content_snapshot_path")
+  contentIndexed      Boolean      @default(false) @map("content_indexed")
+  isDuplicate         Boolean      @default(false) @map("is_duplicate")
+  isBroken            Boolean      @default(false) @map("is_broken")
+  isFavorite          Boolean      @default(false) @map("is_favorite")
+  sortOrder           Int          @default(0) @map("sort_order")
+  note                String?
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  owner      User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  collection Collection    @relation(fields: [collectionId], references: [id])
+  tags       BookmarkTag[]
+  highlights Highlight[]
+  files      File[]
+  reminders  Reminder[]
+
+  @@index([ownerId])
+  @@index([collectionId])
+  @@index([normalizedUrl])
+  @@index([domain])
+  @@index([type])
+  @@map("bookmarks")
+}
+
+enum BookmarkType {
+  LINK
+  ARTICLE
+  VIDEO
+  IMAGE
+  DOCUMENT
+  AUDIO
+}
+
+
+// Tag Model
+model Tag {
+  id             String   @id @default(uuid())
+  ownerId        String   @map("owner_id")
+  name           String
+  normalizedName String   @map("normalized_name")
+  color          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  owner     User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  bookmarks BookmarkTag[]
+
+  @@unique([ownerId, normalizedName])
+  @@index([ownerId])
+  @@map("tags")
+}
+
+// BookmarkTag Junction Table
+model BookmarkTag {
+  bookmarkId String @map("bookmark_id")
+  tagId      String @map("tag_id")
+
+  bookmark Bookmark @relation(fields: [bookmarkId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([bookmarkId, tagId])
+  @@map("bookmark_tags")
+}
+
+// Highlight Model
+model Highlight {
+  id              String         @id @default(uuid())
+  bookmarkId      String         @map("bookmark_id")
+  ownerId         String         @map("owner_id")
+  textSelected    String         @map("text_selected")
+  color           HighlightColor @default(YELLOW)
+  annotationMd    String?        @map("annotation_md")
+  positionContext Json           @map("position_context")
+  snapshotId      String?        @map("snapshot_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  bookmark Bookmark @relation(fields: [bookmarkId], references: [id], onDelete: Cascade)
+  owner    User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([bookmarkId])
+  @@index([ownerId])
+  @@map("highlights")
+}
+
+enum HighlightColor {
+  YELLOW
+  GREEN
+  BLUE
+  PINK
+  PURPLE
+}
+
+
+// File Model
+model File {
+  id         String   @id @default(uuid())
+  ownerId    String   @map("owner_id")
+  bookmarkId String?  @map("bookmark_id")
+  filename   String
+  mimeType   String   @map("mime_type")
+  size       Int
+  s3Path     String   @map("s3_path")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  bookmark Bookmark? @relation(fields: [bookmarkId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId])
+  @@index([bookmarkId])
+  @@map("files")
+}
+
+// Backup Model
+model Backup {
+  id            String    @id @default(uuid())
+  ownerId       String    @map("owner_id")
+  filePath      String    @map("file_path")
+  size          Int
+  autoGenerated Boolean   @default(false) @map("auto_generated")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  expiresAt     DateTime? @map("expires_at")
+
+  // Relations
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@map("backups")
+}
+
+// CollectionPermission Model
+model CollectionPermission {
+  id           String         @id @default(uuid())
+  collectionId String         @map("collection_id")
+  userId       String         @map("user_id")
+  role         PermissionRole @default(VIEWER)
+  createdAt    DateTime       @default(now()) @map("created_at")
+
+  // Relations
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, userId])
+  @@map("collection_permissions")
+}
+
+enum PermissionRole {
+  VIEWER
+  EDITOR
+}
+
+// Reminder Model
+model Reminder {
+  id               String   @id @default(uuid())
+  bookmarkId       String   @map("bookmark_id")
+  ownerId          String   @map("owner_id")
+  remindAt         DateTime @map("remind_at")
+  notificationSent Boolean  @default(false) @map("notification_sent")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Relations
+  bookmark Bookmark @relation(fields: [bookmarkId], references: [id], onDelete: Cascade)
+  owner    User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([bookmarkId])
+  @@index([ownerId])
+  @@index([remindAt])
+  @@map("reminders")
+}
