@@ -1,63 +1,53 @@
+---
+inclusion: always
+---
+
 # Tech Stack
 
-## Build System
-- Package Manager: pnpm (v9.0.0) with workspaces
+## Runtime & Build
 - Node.js: >=20.0.0
-- TypeScript: 5.3+ with strict mode
-- Module System: ES Modules (`"type": "module"`)
+- Package Manager: pnpm v9+ with workspaces
+- TypeScript: 5.3+ strict mode
+- Module System: ES Modules — use `.js` extension in imports
 
-## Backend
-- Framework: Fastify 4.x
-- Database: PostgreSQL 16 with Prisma ORM
-- Caching: Redis 7
-- Search: Elasticsearch 8.x
-- Object Storage: MinIO (S3-compatible)
-- Validation: Zod
-- Logging: Pino
-- API Docs: OpenAPI/Swagger
+## Backend Stack
+- Fastify 4.x (framework)
+- PostgreSQL 16 + Prisma ORM (database)
+- Redis 7 (caching)
+- Elasticsearch 8.x (search)
+- MinIO (S3-compatible storage)
+- Zod (validation)
+- Pino (logging)
 
-## Frontend
-- Build Tool: Vite 5.x
-- Testing: Vitest
-
-## Browser Extension
-- Build Tool: Vite 5.x
+## Frontend & Extension
+- Vite 5.x for builds
+- Vitest for testing
 
 ## Code Quality
-- Linting: ESLint with TypeScript plugin
-- Formatting: Prettier
-- Testing: Vitest with fast-check for property-based tests
+- ESLint + TypeScript plugin
+- Prettier for formatting
+- Vitest + fast-check for property-based tests
 
-## Common Commands
-
+## Key Commands
 ```bash
-# Install dependencies
-pnpm install
+pnpm install          # Install all dependencies
+pnpm dev              # Start development
+pnpm build            # Build all packages
+pnpm test:run         # Run tests (not watch mode)
+pnpm lint && pnpm format
 
-# Development (all packages)
-pnpm dev
-
-# Build all packages
-pnpm build
-
-# Run tests
-pnpm test:run
-
-# Lint and format
-pnpm lint
-pnpm format
-
-# Backend-specific
+# Backend database
 cd packages/backend
-pnpm db:generate    # Generate Prisma client
-pnpm db:migrate     # Run migrations
-pnpm db:push        # Push schema changes
-pnpm db:seed        # Seed database
+pnpm db:generate      # Generate Prisma client
+pnpm db:migrate       # Run migrations
+pnpm db:push          # Push schema changes
+pnpm db:seed          # Seed database
 
-# Start infrastructure
-docker-compose up -d
+docker-compose up -d  # Start infrastructure
 ```
 
-## Environment
-- Copy `.env.example` to `packages/backend/.env`
-- Required services: PostgreSQL, Redis, Elasticsearch, MinIO
+## Critical Rules
+- Always use `.js` extension in TypeScript imports (ES Modules)
+- Run `pnpm db:generate` after Prisma schema changes
+- Use `vitest run` for tests, never watch mode in automation
+- Environment: copy `.env.example` to `packages/backend/.env`
